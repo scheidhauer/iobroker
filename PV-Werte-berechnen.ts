@@ -140,16 +140,10 @@ class Hyper {
         this.id = id;
     }
  
-    private setOutputLimit(val): void {
-        //this.setValue("control.setOutputLimit", val);
+    private setDeviceAutomationInOutLimit(val): void {
         this.setValue("control.setDeviceAutomationInOutLimit", val);
     }
     
-    private setInputLimit(val): void {
-        //this.setValue("control.setInputLimit", val);
-        this.setValue("control.setDeviceAutomationInOutLimit", -val);
-    }
-
     setChargeLimit(val): void {
         this.setValue("control.chargeLimit", val);
     }
@@ -299,8 +293,7 @@ class Hyper {
         // Umschaltung zwischen Laden und Entladen stresst wohl die Hardware, daher machen wir das nicht zu oft
         if (! this.checkModeSwitch(desiredPower)) {
             this.logDebug(": Kein mode switch, warte noch " + (SECS_BETWEEN_MODE_SWITCH - this.getSecsSinceLastModeChange()) + " Sekunden.");
-            this.setInputLimit(0);
-            this.setOutputLimit(0);
+            this.setDeviceAutomationInOutLimit(0);
             return false;
         }
 
@@ -318,14 +311,11 @@ class Hyper {
             //this.logDebug(" reset discharge limit 3");
 
             this.firstTimeWhenOutputWasZero = null;
-            this.setInputLimit(0);
-            this.setOutputLimit(0);
-        } else if (power > 0) {
-            power = Math.min(MAX_POWER, power);
-            this.setOutputLimit(power);
+            this.setDeviceAutomationInOutLimit(0);
         } else {
-            var powerPositive = Math.min(MAX_POWER, power * -1);
-            this.setInputLimit(powerPositive);
+            power = Math.min(MAX_POWER, power);
+            power = Math.max(-MAX_POWER, power);
+            this.setDeviceAutomationInOutLimit(power);
         }
 
         this.setAcMode(power);        
