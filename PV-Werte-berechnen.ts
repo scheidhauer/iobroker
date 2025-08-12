@@ -141,7 +141,15 @@ class Hyper {
     }
  
     private setDeviceAutomationInOutLimit(val): void {
-        this.setValue("control.setDeviceAutomationInOutLimit", val);
+        //this.setValue("control.setDeviceAutomationInOutLimit", val);
+
+        if (val >= 0) {
+            this.setValue("control.setOutputLimit", val);
+        }
+
+        if (val <= 0) {
+            this.setValue("control.setInputLimit", -val);
+        }
     }
     
     setChargeLimit(val): void {
