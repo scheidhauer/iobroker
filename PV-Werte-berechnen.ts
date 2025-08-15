@@ -143,6 +143,8 @@ class Hyper {
     private setDeviceAutomationInOutLimit(val): void {
         //this.setValue("control.setDeviceAutomationInOutLimit", val);
 
+        this.logDebug(": setDeviceAutomationInOutLimit: " + val);
+
         if (val >= 0) {
             this.setValue("control.setOutputLimit", val);
         }
