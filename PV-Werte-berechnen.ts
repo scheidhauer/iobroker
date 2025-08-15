@@ -1,12 +1,55 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// wrapper methods for access to IOBroker API, thus we have no errors 
+// about missing methods in VS Code here
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function getStateIOB(id: string)  {
+    // @ts-ignore
+    return getState(id);
+}
+
+function setStateIOB(id: string, state: any, ack?:boolean): void  {
+    if (ack == undefined) {
+        // @ts-ignore
+        setState(id, state);
+    } else {
+        // @ts-ignore
+        setState(id, state, ack);
+    }
+}
+
+function createStateIOB(id: string)  {
+    // @ts-ignore
+    return createState(id);
+}
+
+function onIOB(options: { id: string | string[]; change: string; }, handler: () => void) {
+    // @ts-ignore
+    on(options, handler);
+}
+
+function getObjectIOB(id: string): any {
+    // @ts-ignore
+    return getObject(id);
+}
+
+function scheduleIOB(pattern: string, callback: () => void) {
+    // @ts-ignore
+    schedule(pattern, callback);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 function getValue(id: string)  {
-    return getState(id).val;
+    return getStateIOB(id).val;
 }
 
 function setStateClever(id: string, value, ack: boolean): void {
     var curVal = getValue(id);
     if (curVal != value) {
-        setState(id, value, ack);
+        setStateIOB(id, value, ack);
     }
 }
 
@@ -20,10 +63,10 @@ var bezugTotal = "statistics.0.temp.sumDelta.alias.0.PV.VerbrauchTotal.day";
 var erzeugungHeute = "alias.0.PV.PV Ertrag Heute";
 
 var eigenverbrauchTotalHeute = "0_userdata.0.PV.EigenverbrauchTotalHeute";
-createState(eigenverbrauchTotalHeute);
+createStateIOB(eigenverbrauchTotalHeute);
 
 var autarkie = "0_userdata.0.PV.Autarkie";
-createState(autarkie);
+createStateIOB(autarkie);
 
 function adaptEigenverbrauchHeute()  {
     var erz: number = getValue(erzeugungHeute);
@@ -45,9 +88,9 @@ function adaptEigenverbrauchHeute()  {
 
 adaptEigenverbrauchHeute();
 
-on({ id: [ pvErzeugung, currentPower ], change: 'ne'}, adaptEigenverbrauch);
+onIOB({ id: [ pvErzeugung, currentPower ], change: 'ne'}, adaptEigenverbrauch);
 
-on({ id: [ einspeisungTotal, bezugTotal, erzeugungHeute ], change: 'ne'}, adaptEigenverbrauchHeute);
+onIOB({ id: [ einspeisungTotal, bezugTotal, erzeugungHeute ], change: 'ne'}, adaptEigenverbrauchHeute);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +115,7 @@ function adaptTeslaChargePower() {
 
     //log("power: " + power + ", actCurrent: " + actCurrent + ", voltage: " + voltage + ", actualPhases: " + actualPhases);
     
-    setState(teslaChargePower, power);
+    setStateIOB(teslaChargePower, power);
 }
 
 
@@ -92,7 +135,7 @@ function getCurrentToUse() {
 
 adaptTeslaChargePower();
 
-on({ id: [ teslaChargerActualCurrent, teslaChargerVoltage, teslaChargerPhases ], change: 'ne'}, adaptTeslaChargePower);
+onIOB({ id: [ teslaChargerActualCurrent, teslaChargerVoltage, teslaChargerPhases ], change: 'ne'}, adaptTeslaChargePower);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +206,7 @@ class Hyper {
     }
 
     private setValue(id: string, val) {
-        setState(this.id + "." + id, val);
+        setStateIOB(this.id + "." + id, val);
     }
 
     getPower(): number {
@@ -188,7 +231,7 @@ class Hyper {
     }
 
     getName(): string {
-        var thisHyper = getObject(this.id);
+        var thisHyper = getObjectIOB(this.id);
         var name:string = thisHyper.common.name.de;
         return name.replace(/ \(.*\)/, ""); // ID rausnehmen
     }
@@ -395,7 +438,7 @@ function adaptEigenverbrauch()  {
 
     var verbrauch: number = (erz + power - akkuPower);
     //log("Verbrauch: " + verbrauch);
-    setState(eigenverbrauch, verbrauch);
+    setStateIOB(eigenverbrauch, verbrauch);
 }
 
 adaptEigenverbrauch();
@@ -468,7 +511,7 @@ function getHyperWithHighestOrLowestCapacity(availableHypers: Hyper[], desiredPo
     return hyperWithHighestCapacity;
 }
 
-on({ id: POWER_ID, change: 'ne'}, adaptZendure);
+onIOB({ id: POWER_ID, change: 'ne'}, adaptZendure);
 //adaptZendure();
 
 
@@ -483,13 +526,7 @@ function setChargeLimitAllHypers(val: number): void {
 //schedule( {hour: 1, minute: 0, dayOfWeek: 6}, function() {
 
 // Samstag 5 Uhr auf 100%
-schedule( '0 5 * * 6', () => {
-    setChargeLimitAllHypers(100);
-  });
+scheduleIOB( '0 5 * * 6', () => setChargeLimitAllHypers(100));
 
 // Sonntag 5 Uhr wieder zurück auf 90%
-schedule('0 5 * * 0', () => {
-    setChargeLimitAllHypers(90);
-  });
-
-
+scheduleIOB('0 5 * * 0', () => setChargeLimitAllHypers(90));
