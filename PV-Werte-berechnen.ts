@@ -244,7 +244,7 @@ class Hyper {
                 console.info("change power of " + this.getGUID() + " to: " + power + " (before: " + curPower + ")");
                 this.setAcValue(power);
             }
-            return;
+            return false;
         }
 
         this.warnWhenControllOff = true;
@@ -399,7 +399,7 @@ function adaptEigenverbrauch()  {
 adaptEigenverbrauch();
 
 
-var lastChoosenHyper: Hyper = null;
+var lastChoosenHyper: Hyper | null = null;
 
 function adaptZendure()  {
     var curTotalPower = getCurrentZendurePower(true);
@@ -471,7 +471,7 @@ on({ id: POWER_ID, change: 'ne'}, adaptZendure);
 
 
 function setChargeLimitAllHypers(val: number): void {
-    log('*** Alle Hypers auf ' + val + '%');
+    console.info('*** Alle Hypers auf ' + val + '%');
     for (var hyper of Hyper.getAllHypers()) {
         hyper.setChargeLimit(val);
     }
