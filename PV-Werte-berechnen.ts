@@ -155,6 +155,9 @@ const PREFER_HYPER_MAX_DIFFERENCE = 500;
 
 const SECS_BETWEEN_MODE_SWITCH = 3*60; // mindestens 3 min zwischen mode switches
 
+// when the change between old and new power ist below this value, we will ignore it in oder not to send too many commands to the akku
+const MIN_POWER_CHANGE = 30;
+
 enum AcMode {
     AC_MODE_AUS = 0,
     AC_MODE_LADEN = 1,
@@ -184,9 +187,16 @@ class Hyper {
     }
  
     private setDeviceAutomationInOutLimit(val): void {
-        //this.setValue("control.setDeviceAutomationInOutLimit", val);
 
         this.logDebug(": setDeviceAutomationInOutLimit: " + val);
+
+        if (this.noNeedToChangePower(val)) {
+            this.logDebug(": noNeedToChangePower: new: " + val + ", old: " + this.getPower());
+            return;
+        }
+
+        //this.setValue("control.setDeviceAutomationInOutLimit", val);
+
 
         if (val >= 0) {
             this.setValue("control.setOutputLimit", val);
@@ -196,6 +206,25 @@ class Hyper {
             this.setValue("control.setInputLimit", -val);
         }
     }
+
+    private noNeedToChangePower(newPower: number): boolean {
+        var curPower = this.getPower();
+
+        if (curPower == newPower) {
+            return true;
+        }
+
+        if (newPower == 0 || Math.sign(curPower) != Math.sign(newPower)) {
+            return false;
+        }
+
+        if (Math.abs(Math.abs(curPower) - Math.abs(newPower)) < MIN_POWER_CHANGE) {
+            return true;
+        } 
+
+        return false;
+    }
+
     
     setChargeLimit(val): void {
         this.setValue("control.chargeLimit", val);
