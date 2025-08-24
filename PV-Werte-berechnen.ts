@@ -186,12 +186,15 @@ class Hyper {
         this.id = id;
     }
  
-    private setDeviceAutomationInOutLimit(val): void {
+    private setDeviceAutomationInOutLimit(val: number): void {
 
-        this.logDebug(": setDeviceAutomationInOutLimit: " + val);
+        // hmmmh, once again I have to update the sign?
+        var curPower = - this.getPower();
 
-        if (this.noNeedToChangePower(val)) {
-            this.logDebug(": noNeedToChangePower: new: " + val + ", old: " + this.getPower());
+        this.logDebug(": setDeviceAutomationInOutLimit: " + val + ", " + curPower);
+
+        if (this.noNeedToChangePower(val, curPower)) {
+            this.logDebug(": noNeedToChangePower: new: " + val + ", old: " + curPower);
             return;
         }
 
@@ -207,8 +210,7 @@ class Hyper {
         }
     }
 
-    private noNeedToChangePower(newPower: number): boolean {
-        var curPower = this.getPower();
+    private noNeedToChangePower(newPower: number, curPower: number): boolean {
 
         if (curPower == newPower) {
             return true;
