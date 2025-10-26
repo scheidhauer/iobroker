@@ -556,8 +556,14 @@ function setChargeLimitAllHypers(val: number): void {
 // Alle Hypers ein mal die Woche auf 100% laden (wenn genug Sonne kommt :-)
 //schedule( {hour: 1, minute: 0, dayOfWeek: 6}, function() {
 
-// Samstag 5 Uhr auf 100%
-scheduleIOB( '0 5 * * 6', () => setChargeLimitAllHypers(100));
+const Sommer:boolean = false;
 
-// Sonntag 5 Uhr wieder zurück auf 90%
-scheduleIOB('0 5 * * 0', () => setChargeLimitAllHypers(90));
+if (Sommer) {
+
+    // Samstag 5 Uhr auf 100%
+    scheduleIOB( '0 5 * * 6', () => setChargeLimitAllHypers(100));
+    
+    // Sonntag 5 Uhr wieder zurück auf 90%
+    scheduleIOB('0 5 * * 0', () => setChargeLimitAllHypers(90));
+}
+
