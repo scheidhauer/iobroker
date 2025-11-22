@@ -93,50 +93,6 @@ onIOB({ id: [ pvErzeugung, currentPower ], change: 'ne'}, adaptEigenverbrauch);
 onIOB({ id: [ einspeisungTotal, bezugTotal, erzeugungHeute ], change: 'ne'}, adaptEigenverbrauchHeute);
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-var teslaChargePower = "0_userdata.0.PV.TeslaChargePower";
-
-var teslaChargerActualCurrent = "tesla-motors.0.LRW3E7FS6PC834425.charge_state.charger_actual_current";
-var teslaChargeCurrentRequested = "tesla-motors.0.LRW3E7FS6PC834425.charge_state.charge_current_request";
-var teslaChargerVoltage = "tesla-motors.0.LRW3E7FS6PC834425.charge_state.charger_voltage";
-var teslaChargerPhases = "tesla-motors.0.LRW3E7FS6PC834425.charge_state.charger_phases";
-
-function adaptTeslaChargePower() {
-    var voltage = getValue(teslaChargerVoltage);
-    var phases = getValue(teslaChargerPhases);
-
-    // see also https://github.com/pkuehnel/TeslaSolarCharger/blob/d0baa36136d7ba8d1d8ffbb7e8152e3f6fe902ca/TeslaSolarCharger/Shared/Dtos/Settings/CarState.cs#L34
-    var actualPhases = phases > 1 ? 3 : 1;
-
-    var actCurrent = getCurrentToUse();
-
-    var power = actCurrent * voltage * actualPhases;
-
-    //log("power: " + power + ", actCurrent: " + actCurrent + ", voltage: " + voltage + ", actualPhases: " + actualPhases);
-    
-    setStateIOB(teslaChargePower, power);
-}
-
-
-// see https://github.com/pkuehnel/TeslaSolarCharger/blob/d0baa36136d7ba8d1d8ffbb7e8152e3f6fe902ca/TeslaSolarCharger/Shared/Dtos/Settings/CarState.cs#L34
-// method "ChargingPower"
-function getCurrentToUse() {
-    var actCurrent = getValue(teslaChargerActualCurrent);
-    var reqCurrent = getValue(teslaChargeCurrentRequested);
-
-    if (reqCurrent < 5 && actCurrent == reqCurrent + 1) {
-        return (actCurrent + reqCurrent) / 2;
-    } else {
-        return actCurrent;
-    }
-}
-
-
-adaptTeslaChargePower();
-
-onIOB({ id: [ teslaChargerActualCurrent, teslaChargerVoltage, teslaChargerPhases ], change: 'ne'}, adaptTeslaChargePower);
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
