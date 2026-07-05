@@ -725,7 +725,7 @@ updateTscStatus();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const ID_WHATSAPP    = 'whatsapp-cmb.1.sendMessage'; // Evtl. whatsapp-cmb.1.<Instanz>.sendMessage anpassen
-const MAX_AGE_MS     = 60 * 60 * 1000; // 1 Stunde in Millisekunden
+const MAX_AGE_MS     = 2 * 60 * 60 * 1000; // 2 Stunden in Millisekunden
 
 // Zeitplan: Läuft alle 15 Minuten (*/15 * * * *)
 scheduleIOB("*/15 * * * *", () => {
