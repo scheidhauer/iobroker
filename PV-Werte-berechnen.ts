@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // wrapper methods for access to IOBroker API, thus we have no errors 
 // about missing methods in VS Code here
@@ -762,3 +763,23 @@ for (const devId of DEHUMIDIFIERS) {
         log(message, 'info');
     });
 }
+
+
+// Shelly für Zendure Akkus: Ladung/Entladung berechnen
+
+const energy = 'shelly.0.shellypmminig3#543204403244#1.PM1:0.Energy';
+const returnedEnergy = 'shelly.0.shellypmminig3#543204403244#1.PM1:0.ReturnedEnergy';
+const ladung = '0_userdata.0.PV.Zendure/Ladung';
+
+function berechneLadung() {
+    const valEnergy = getState(energy).val || 0;
+    const valReturned = getState(returnedEnergy).val || 0;
+    
+    const valLadung = valEnergy - valReturned; 
+
+    setState(ladung, valLadung, true); 
+}
+
+// Trigger für beide Quell-Datenpunkte
+on({id: energy, change: "ne"}, berechneLadung);
+on({id: returnedEnergy, change: "ne"}, berechneLadung);
