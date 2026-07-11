@@ -738,6 +738,9 @@ scheduleIOB("*/15 * * * *", () => {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Luftentfeuchter: WhatsApp-Benachrichtigung bei vollem Wassertank
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Luftentfeuchter: WhatsApp-Benachrichtigung bei vollem Wassertank (mit 5 Min. Verzögerung)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const DEHUMIDIFIERS = [
     'midea.0.153931628343857',
@@ -749,21 +752,46 @@ const WHATSAPP_RECIPIENTS = [
     'whatsapp-cmb.0.sendMessage'  // Marion
 ];
 
+// Speicher für die Timer der einzelnen Geräte
+const tankTimers = {};
+
 for (const devId of DEHUMIDIFIERS) {
+    // Wir triggern auf jede Änderung ('ne'), um auch das Zurücksetzen auf 'false' zu erfassen
     // @ts-ignore
-    on({id: devId + ".status.tankFull", change: 'ne', val: true}, () => {
-        const name = getValue(devId + ".info.name") || "Luftentfeuchter";
-        const message = `⚠️ *Luftentfeuchter*: Der Tank von *${name}* ist voll und muss geleert werden!`;
+    on({id: devId + ".status.tankFull", change: 'ne'}, (obj) => {
         
-        for (const waId of WHATSAPP_RECIPIENTS) {
-            if (existsStateIOB(waId)) {
-                setStateIOB(waId, message);
+        if (obj.state.val === true) {
+            // Falls aus irgendeinem Grund schon ein Timer läuft, diesen sicherheitshalber löschen
+            if (tankTimers[devId]) clearTimeout(tankTimers[devId]);
+            
+            // Timer für 5 Minuten (5 * 60 * 1000 Millisekunden) starten
+            tankTimers[devId] = setTimeout(() => {
+                const name = getValue(devId + ".info.name") || "Luftentfeuchter";
+                const message = `⚠️ *Luftentfeuchter*: Der Tank von *${name}* ist seit 5 Minuten voll und muss geleert werden!`;
+                
+                for (const waId of WHATSAPP_RECIPIENTS) {
+                    if (existsStateIOB(waId)) {
+                        setStateIOB(waId, message);
+                    }
+                }
+                log(message, 'info');
+                
+                // Timer-Referenz nach Ausführung löschen
+                tankTimers[devId] = null;
+            }, 5 * 60 * 1000);
+            
+            log(`Luftentfeuchter ${devId}: Tank voll gemeldet. Timer für 5 Minuten gestartet.`, 'info');
+            
+        } else {
+            // Wenn der Status wieder false wird, löschen wir den Timer, damit keine Nachricht gesendet wird
+            if (tankTimers[devId]) {
+                clearTimeout(tankTimers[devId]);
+                tankTimers[devId] = null;
+                log(`Luftentfeuchter ${devId}: Tank ist nicht mehr voll. Timer abgebrochen.`, 'info');
             }
         }
-        log(message, 'info');
     });
 }
-
 
 // Shelly für Zendure Akkus: Ladung/Entladung berechnen
 
