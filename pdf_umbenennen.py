@@ -144,8 +144,8 @@ def main():
     such_muster = os.path.join(ORDNER_PFAD, "*.pdf")
     pdf_dateien = glob.glob(such_muster)
     
-    # Regex für das Scan-Format: JJJJMMTT_HHMMSS.pdf (z.B. 20260424_083623.pdf)
-    scan_muster = re.compile(r"^\d{8}_\d{6}\.pdf$")
+    # Regex für das neue Scan-Format: epsonJJJJMMTT_HHMMSS.pdf
+    scan_muster = re.compile(r"^epson\d{8}_\d{6}\.pdf$")
 
     print(f"Aktueller Ordner: {ORDNER_PFAD}")
     
