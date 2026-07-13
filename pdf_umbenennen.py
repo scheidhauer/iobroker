@@ -8,20 +8,25 @@ import Quartz
 import Vision
 from Cocoa import NSURL
 
-# 1. KONFIGURATION
+# 1. DYNAMISCHE PFADERKENNUNG
+# Wo liegt dieses Skript? (Unterordner 'pdf_umbenennen')
+SKRIPT_ORDNER = os.path.dirname(os.path.abspath(__file__))
+# Wo liegen die PDFs? (Ein Ordner darüber, also parallel zum Unterordner)
+ORDNER_PFAD = os.path.dirname(SKRIPT_ORDNER)
+
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    # Lädt die .env direkt aus dem Skript-Ordner
+    load_dotenv(os.path.join(SKRIPT_ORDNER, ".env"))
 except ImportError:
     pass
 
 API_KEY = os.getenv("GEMINI_API_KEY")
-ORDNER_PFAD = os.getcwd()
 
 if not API_KEY:
     raise ValueError(
-        "Fehler: Die Umgebungsvariable 'GEMINI_API_KEY' wurde nicht gefunden!\n"
-        "Bitte erstelle eine '.env' Datei oder setze sie im Terminal mit: export GEMINI_API_KEY='dein_schlüssel'"
+        f"Fehler: Die Umgebungsvariable 'GEMINI_API_KEY' wurde nicht gefunden!\n"
+        f"Bitte erstelle eine '.env' Datei im Ordner: {SKRIPT_ORDNER}"
     )
 
 client = genai.Client(api_key=API_KEY)
@@ -140,38 +145,37 @@ def finde_freien_dateinamen(ziel_ordner, gewuenschter_name):
     return neuer_name
 
 def main():
-    # Sucht alle PDF-Dateien
+    # Sucht alle PDF-Dateien im übergeordneten Ordner
     such_muster = os.path.join(ORDNER_PFAD, "*.pdf")
     pdf_dateien = glob.glob(such_muster)
     
-    # Regex für das neue Scan-Format: epsonJJJJMMTT_HHMMSS.pdf
+    # Regex für das Scan-Format: epsonJJJJMMTT_HHMMSS.pdf
     scan_muster = re.compile(r"^epson\d{8}_\d{6}\.pdf$")
 
-    print(f"Aktueller Ordner: {ORDNER_PFAD}")
+    print(f"Scanne Ordner nach PDFs: {ORDNER_PFAD}")
     
-    # Filtere Dateien: Nur die, die exakt dem Scan-Muster entsprechen
+    # Filtere Dateien
     zu_verarbeiten = [f for f in pdf_dateien if scan_muster.match(os.path.basename(f))]
 
-    print(f"{len(zu_verarbeiten)} rohe Scan-PDFs gefunden. Starte Verarbeitung...")
+    print(f"{len(zu_verarbeiten)} passende Epson-PDFs gefunden.")
 
     for pfad in zu_verarbeiten:
         try:
-            print(f"\nVerarbeite: {os.path.basename(pfad)}...")
+            print(f"Verarbeite: {os.path.basename(pfad)}...")
             text = extrahiere_text(pfad)
             
             if not text.strip():
-                print("Kein Text im Dokument gefunden (auch nicht per OCR). Überspringe.")
+                print("Kein Text gefunden. Überspringe.")
                 continue
                 
             raw_neuer_name = generiere_dateiname(text)
             neuer_name = bereinige_und_sichere_dateiname(raw_neuer_name)
             
-            # Schutz vor Überschreiben: freien Namen ermitteln
             sicherer_name = finde_freien_dateinamen(ORDNER_PFAD, neuer_name)
             neuer_pfad = os.path.join(ORDNER_PFAD, sicherer_name)
             
             os.rename(pfad, neuer_pfad)
-            print(f"Erfolgreich umbenannt in: {sicherer_name}")
+            print(f"Umbenannt in: {sicherer_name}")
             
         except Exception as e:
             print(f"Fehler bei {os.path.basename(pfad)}: {e}")
