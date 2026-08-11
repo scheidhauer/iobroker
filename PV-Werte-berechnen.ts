@@ -800,14 +800,19 @@ const returnedEnergy = 'shelly.0.shellypmminig3#543204403244#1.PM1:0.ReturnedEne
 const ladung = '0_userdata.0.PV.Zendure/Ladung';
 
 function berechneLadung() {
-    const valEnergy = getState(energy).val || 0;
-    const valReturned = getState(returnedEnergy).val || 0;
-    
-    const valLadung = valEnergy - valReturned; 
+    // 2 Sekunden warten, damit sicher 'energy' und 'returnedEnergy' uptodate sind:
+    setTimeout(() => {
+        const valEnergy = (getState(energy).val as number) || 0;
+        const valReturned = (getState(returnedEnergy).val as number) || 0;
+        
+        const valLadung = valEnergy - valReturned; 
 
-    setState(ladung, valLadung, true); 
+        setState(ladung, valLadung, true);
+    }, 2000);
 }
 
 // Trigger für beide Quell-Datenpunkte
 on({id: energy, change: "ne"}, berechneLadung);
-on({id: returnedEnergy, change: "ne"}, berechneLadung);
+
+// nicht nötig: wenn 'returnedEnergy' sich ändert, dann ändert sich auch immer 'energy':
+//on({id: returnedEnergy, change: "ne"}, berechneLadung);
